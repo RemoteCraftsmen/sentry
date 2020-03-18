@@ -1,0 +1,74 @@
+version: '3'
+
+volumes:
+   sentry_pgdb:
+   sentry_redis:
+
+networks:
+    global:
+        external: true
+
+services:
+  redis:
+    image: redis
+    volumes:
+      - sentry_redis:/data
+    networks:
+        - global
+
+  postgres:
+    image: postgres
+    environment:
+      POSTGRES_USER: sentry
+      POSTGRES_PASSWORD: sentry
+      POSTGRES_DB: sentry
+    volumes:
+     - sentry_pgdb:/var/lib/postgresql/data
+    networks:
+        - global
+
+  sentry:
+    image: sentry
+    links:
+     - redis
+     - postgres
+    ports:
+     - 127.0.0.1:9000:9000
+    environment:
+      SENTRY_SECRET_KEY: 'SENTRY_SECRET_KEY'
+      SENTRY_POSTGRES_HOST: postgres
+      SENTRY_DB_USER: sentry
+      SENTRY_DB_PASSWORD: sentry
+      SENTRY_REDIS_HOST: redis
+    networks:
+        - global
+
+  cron:
+    image: sentry
+    links:
+     - redis
+     - postgres
+    command: "sentry run cron"
+    environment:
+      SENTRY_SECRET_KEY: 'SENTRY_SECRET_KEY'
+      SENTRY_POSTGRES_HOST: postgres
+      SENTRY_DB_USER: sentry
+      SENTRY_DB_PASSWORD: sentry
+      SENTRY_REDIS_HOST: redis
+    networks:
+        - global
+
+  worker:
+    image: sentry
+    links:
+     - redis
+     - postgres
+    command: "sentry run worker"
+    environment:
+      SENTRY_SECRET_KEY: 'SENTRY_SECRET_KEY'
+      SENTRY_POSTGRES_HOST: postgres
+      SENTRY_DB_USER: sentry
+      SENTRY_DB_PASSWORD: sentry
+      SENTRY_REDIS_HOST: redis
+    networks:
+        - global

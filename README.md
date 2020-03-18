@@ -1,29 +1,35 @@
-# README #
+## Generate a new secret key to be shared by all sentry containers. This value will then be used as the SENTRY_SECRET_KEY environment variable.
 
-This README would normally document whatever steps are necessary to get your application up and running.
+`$ docker run --rm sentry config generate-secret-key`
 
-### What is this repository for? ###
+## Put secret into docker-compose.yml
 
-* Quick summary
-* Version
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+## Run docker-compose
 
-### How do I get set up? ###
+`$ docker-compose up -d`
 
-* Summary of set up
-* Configuration
-* Dependencies
-* Database configuration
-* How to run tests
-* Deployment instructions
+## Upgrade sentry
 
-### Contribution guidelines ###
+`$ docker-compose exec sentry sentry upgrade`
 
-* Writing tests
-* Code review
-* Other guidelines
+## Nginx config
 
-### Who do I talk to? ###
+```
+server {
+    client_max_body_size 15M;
+    server_name sentry.domain.com;
 
-* Repo owner or admin
-* Other community or team contact
+    location / {
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-NginX-Proxy true;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_pass http://127.0.0.1:9000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
