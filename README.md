@@ -1,8 +1,10 @@
+## Go to docker folder and copy default.config.env.dist into default.config.env
+
 ## Generate a new secret key to be shared by all sentry containers. This value will then be used as the SENTRY_SECRET_KEY environment variable.
 
 `$ docker run --rm sentry config generate-secret-key`
 
-## Put secret into docker-compose.yml
+## Put secret into docker/default.config.env
 
 ## Run docker-compose
 

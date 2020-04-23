@@ -1,74 +1,72 @@
 version: '3'
 
 volumes:
-   sentry_pgdb:
-   sentry_redis:
+  sentry_pgdb:
+  sentry_redis:
 
 networks:
-    global:
-        external: true
+  global:
+    external: true
 
 services:
   redis:
     image: redis
+    container_name: redis.monitor.docker
+    restart: unless-stopped
     volumes:
-      - sentry_redis:/data
+    - sentry_redis:/data
     networks:
-        - global
+    - global
 
   postgres:
     image: postgres
+    container_name: postgres.monitor.docker
+    restart: unless-stopped
     environment:
       POSTGRES_USER: sentry
       POSTGRES_PASSWORD: sentry
       POSTGRES_DB: sentry
     volumes:
-     - sentry_pgdb:/var/lib/postgresql/data
+    - sentry_pgdb:/var/lib/postgresql/data
     networks:
-        - global
+    - global
 
   sentry:
     image: sentry
+    container_name: sentry.monitor.docker
+    restart: unless-stopped
     links:
-     - redis
-     - postgres
+    - redis
+    - postgres
     ports:
-     - 127.0.0.1:9000:9000
-    environment:
-      SENTRY_SECRET_KEY: 'SENTRY_SECRET_KEY'
-      SENTRY_POSTGRES_HOST: postgres
-      SENTRY_DB_USER: sentry
-      SENTRY_DB_PASSWORD: sentry
-      SENTRY_REDIS_HOST: redis
+    - 127.0.0.1:9000:9000
+    env_file:
+    - ./docker/default.config.env
     networks:
-        - global
+    - global
 
   cron:
     image: sentry
+    container_name: cron.monitor.docker
+    restart: unless-stopped
     links:
-     - redis
-     - postgres
+    - redis
+    - postgres
     command: "sentry run cron"
-    environment:
-      SENTRY_SECRET_KEY: 'SENTRY_SECRET_KEY'
-      SENTRY_POSTGRES_HOST: postgres
-      SENTRY_DB_USER: sentry
-      SENTRY_DB_PASSWORD: sentry
-      SENTRY_REDIS_HOST: redis
+    env_file:
+    - ./docker/default.config.env
     networks:
-        - global
+    - global
 
   worker:
     image: sentry
+    container_name: worker.monitor.docker
+    restart: unless-stopped
     links:
-     - redis
-     - postgres
+    - redis
+    - postgres
     command: "sentry run worker"
-    environment:
-      SENTRY_SECRET_KEY: 'SENTRY_SECRET_KEY'
-      SENTRY_POSTGRES_HOST: postgres
-      SENTRY_DB_USER: sentry
-      SENTRY_DB_PASSWORD: sentry
-      SENTRY_REDIS_HOST: redis
+    env_file:
+    - ./docker/default.config.env
     networks:
-        - global
+    - global
